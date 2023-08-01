@@ -1,0 +1,134 @@
+use master
+go
+
+if db_id('mockproject_datn_2022') is not null
+drop database mockproject_datn_2022
+go
+
+create database mockproject_datn_2022
+go
+
+use mockproject_datn_2022
+go
+
+create table roles
+(
+	id				tinyint			primary key identity,  -- auto_increment
+	[description]	nvarchar(20)	not null unique
+)
+go
+
+create table users
+(
+	id				bigint			primary key identity,
+	username		varchar(20)		not null unique,
+	fullname		nvarchar(50)	null,
+	hashPassword	varchar(255)	not null,
+	email			varchar(100)	not null unique,
+	createdDate		datetime		not null default getdate(), -- now()
+	imgUrl			varchar(255)	null,
+	roleId			tinyint			foreign key references roles(id),
+	isDeleted		bit				not null default 0 -- 0: false, 1: true
+)
+go
+
+create table product_types
+(
+	id				tinyint			primary key identity,
+	[description]	ntext			null,
+	slug			varchar(255)	not null,
+	isDeleted		bit				not null default 0
+)
+go
+
+create table unit_types
+(
+	id				tinyint			primary key identity,
+	[description]	ntext			null,
+	isDeleted		bit				not null default 0
+)
+
+create table products
+(
+	id				bigint			primary key identity,
+	[name]			nvarchar(255)	not null,
+	typeId			tinyint			foreign key references product_types(id),
+	quantity		int				not null,
+	price			decimal(12,3)	not null,
+	unitId			tinyint			foreign key references unit_types(id),
+	imgUrl			varchar(255)	null,
+	[description]	ntext			null,
+	slug			varchar(255)	not null unique,
+	isDeleted		bit				not null default 0
+)
+go
+
+create table orders
+(
+	id				bigint			primary key identity,
+	userId			bigint			foreign key references users(id),
+	[address]		nvarchar(255)	not null,
+	phone			varchar(11)		not null,
+	createdDate		datetime		not null default getdate()
+)
+go
+
+create table order_details
+(
+	id				bigint			primary key identity,
+	orderId			bigint			foreign key references orders(id),
+	productId		bigint			foreign key references products(id),
+	price			decimal(12,3)	not null,
+	quantity		int				not null
+)
+go
+
+CREATE TABLE favorites (
+    id int identity not null,
+    productsId bigint foreign key references products(id),
+    userId bigint foreign key references users(id),
+    favoriteDate datetime not null  default getdate()
+);
+
+insert into roles([description]) values
+('admin'),
+('user')
+go
+
+-- password:  111
+insert into users(username, fullname, hashPassword, email, imgUrl, roleId) values
+('vunv', N'Võ Nguyên Vũ', '$2a$10$bC3fIu4WyB/FGwlbOPlZt.3IRzkM34vZNt1Kbe5ZDcq7r/XZFWNrO', 'vunv@abc.com', 'default.png', 1),
+('cuongnt', N'Nguyễn Tấn Cương', '$2a$10$bC3fIu4WyB/FGwlbOPlZt.3IRzkM34vZNt1Kbe5ZDcq7r/XZFWNrO', 'cuongnt@abc.com', 'default.png', 1),
+('binhnt', N'Nguyễn Thanh Bình', '$2a$10$bC3fIu4WyB/FGwlbOPlZt.3IRzkM34vZNt1Kbe5ZDcq7r/XZFWNrO', 'binhnt@abc.com', 'default.png', 1),
+('chanhvm', N'Võ Minh Chánh', '$2a$10$bC3fIu4WyB/FGwlbOPlZt.3IRzkM34vZNt1Kbe5ZDcq7r/XZFWNrO', 'chanhvm@abc.com', 'default.png', 1),
+('haihq', N'Hàn Quốc Hải', '$2a$10$bC3fIu4WyB/FGwlbOPlZt.3IRzkM34vZNt1Kbe5ZDcq7r/XZFWNrO', 'haihq@abc.com', 'default.png', 1)
+go
+
+insert into product_types([description], slug) values
+(N'Sách Giáo Khoa', 'sach-giao-khoa'),
+(N'Sách Văn Học', 'sach-van-hoc'),
+(N'Sách Kinh Tế', 'sach-kinh-te'),
+(N'Sách Kỹ Năng Sống', 'sach-ky-nang-song'),
+(N'Sách Thiếu Nhi', 'sach-thieu-nhi'),
+(N'Sách Văn Hóa Du Lịch', 'sach-van-hoa-du-lich'),
+(N'Sách Tâm Linh', 'sach-tam-linh'),
+(N'Sách Tâm Lý', 'sach-tam-ly'),
+(N'Truyện Manga/Comic', 'truyen-manga-comic')
+go
+
+insert into unit_types([description]) values
+(N'Quyển'),
+(N'Bộ')
+go
+
+insert into products([name],  typeId, quantity, price, unitId, imgUrl, [description], slug) values
+(N'Bí Mật Tư Duy Triệu Phú',	3, 50,  100000, 1, 'kinhte2.jpg', N'Tác Giả:', 'bi-mat-tu-duy-trieu-phu'),
+(N'Người Bán Hàng Vĩ Đại',		3, 100, 70000,  1, 'kinhte3.jpg', N'Tác Giả:', 'nguoi-ban-hang-vi-dai'),
+(N'30 TỪ vựng tiếng Anh',		1, 30,  250000, 1, 'sachngoaingu1.jpg', N'Tác Giả:', '30-tu-vung-tieng-anh'),
+(N'Hacker Ielts',				1, 70,  50000, 1, 'sachngoaingu5.jpg', N'Tác Giả:', 'hacker-ielts'),
+(N'Nhà Giả kim',				2, 29,  350000, 1, 'vanhoc2.jpg', N'Tác Giả:', 'nha-gia-kim'),
+(N'Cây Cam ngọt nhà tôi',		2, 80, 135000, 1, 'vanhoc3.jpg', N'Tác Giả:', 'cay-cam-ngot-nha-toi'),
+(N'Đọc vị bất kì ai',			8, 75, 170000, 1, 'sachtamly2.jpg', N'Tác Giả:', 'doc-vi-bat-ki-ai'),
+(N'Hiểu về trái tim',			4, 65, 80000, 1, 'sachtamly5.jpg', N'Tác Giả:', 'hieu-ve-trai-tim'),
+(N'Dám Nghĩ lớn',				4, 55, 120000, 1, 'kynangsong2.jpg', N'Tác Giả:', 'dam-nghi-lon')
+go
